@@ -66,10 +66,39 @@ bool CommandParser::checkCramer(const std::vector<std::string> & tokens){
 
     return true;
 }
+bool CommandParser::checkTriangularSolve(const std::vector<std::string> & tokens){
+    if (tokens.size()<8)
+        return false;
+    if (tokens[1]!="=")
+        return false ;
+    if (tokens[2]!="triangularSolve")
+        return false;
+    if (tokens[3]!="(")
+        return false;
+    if (tokens[5]!=",")
+        return false;
+    if (tokens[7]!=")")
+        return false;
+
+    if (std::find(matrixesNames.begin(),matrixesNames.end(),tokens[4])==matrixesNames.end())
+        matrixesNames.push_back(tokens[4]);
+    if (std::find(columnVectorNames.begin(),columnVectorNames.end(),tokens[6])==columnVectorNames.end())
+        columnVectorNames.push_back(tokens[6]);
+
+    Operation op;
+    op.target=tokens[0];
+    op.operator1=tokens[4];
+    op.operator2=tokens[6];
+    op.operation=tokens[2];
+
+    operations.push_back(op);
+
+    return true;
+}
 void CommandParser::parseLine(const std::string &line){
     Tokenizer t;
     std::vector<std::string> tokens=t.tokenize(line);
-    bool ok=checkCramer(tokens);
+    bool ok=checkCramer(tokens)||checkTriangularSolve(tokens);
     if (!ok)
         throw std::string("unknow command ").append(line);
 }

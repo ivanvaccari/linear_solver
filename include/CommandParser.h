@@ -23,10 +23,13 @@
 class Operation{
 
 public:
+    Operation():targetIsMatrix(false){
+    }
     std::string operation;
     std::string operator1;
     std::string operator2;
     std::string target;
+    bool targetIsMatrix;
 
 };
 
@@ -37,6 +40,7 @@ class CommandParser
         std::list<std::string> columnVectorNames;
 
         bool checkCramer(const std::vector<std::string> & tokens);
+        bool checkTriangularSolve(const std::vector<std::string> & tokens);
     public:
         CommandParser();
         virtual ~CommandParser();

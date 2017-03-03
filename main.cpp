@@ -33,8 +33,7 @@ int main(int argc, char* argv[]){
         std::cerr << "Linear system solver.\nA simple linear system solver for learning purposes.\n" << std::endl;
         std::cerr << "Usage: " << argv[0] << " -f datafile.txt\n" << std::endl;
         std::cerr << "Parameter list\n -h  Show a small man page\n -f  Specify the input definition file\n" << std::endl;
-        std::cerr << "This version support these solving algorithms: cramer rule\n" << std::endl;
-
+        std::cerr << "This version support these solving algorithms: cramer rule, triangular rule\n" << std::endl;
         return 1;
     }
 
@@ -44,13 +43,17 @@ int main(int argc, char* argv[]){
             i++;
             fileName=std::string(argv[i]);
         }
-        if (strcmp(argv[i],"-f")==0){
-            i++;
-            fileName=std::string(argv[i]);
+        if (strcmp(argv[i],"-h")==0){
+            //print a help then exit
+            std::cerr << "Linear system solver.\nA simple linear system solver for learning purposes.\n" << std::endl;
+            std::cerr << "Definition file syntax" << std::endl;
+            std::cerr << "-Define a matrix\n [matrix NAME]\n a11 a12 a13 ... a1n\n a21 a22 a23 ... a2n\n ... ... ... ... ...\n an1 an2 an3 ... ann\n\n\n-Define a column vector\n[colvector name]\n a1\n a2\n ...\n an\n\n\n-Define commands\n[commands]\ntargetname1=cramer(MATRIXNAME1,colvectorname1)\ntargetname2=cramer(MATRIXNAME2,colvectorname2)\n...\n\n\nEach definition section must be separated by an empty line\n" << std::endl;
+            return 1;
         }
     }
 
-    //matrix and vector cache
+    //matrix and vector cache. Key is the name of the matrix/vector, value is
+    //the effective object. Just like a couple name and data
     std::map<std::string,Matrix> matrixes;
     std::map<std::string,ColumnVector> columnVectors;
 
@@ -111,6 +114,14 @@ int main(int argc, char* argv[]){
                 ColumnVector Xi;
                 float d=matrixes[op.operator1].determinant();
                 std::vector<float> result=Algorithms::cramer_solve(matrixes[op.operator1],columnVectors[op.operator2].toStdVector(),d);
+                columnVectors[op.target]=ColumnVector(result);
+                std::cout<<"Result "<<op.target<<":"<<std::endl;
+                columnVectors[op.target].print();
+            }else if (op.operation=="triangularSolve"){
+                std::cout<<std::endl;
+                std::cout<<"Solving "<<op.target<<"=triangolarSolve("<<op.operator1<<","<<op.operator2<<")..."<<std::endl;
+                ColumnVector Xi;
+                std::vector<float> result=Algorithms::triangular_matrix_solve(matrixes[op.operator1],columnVectors[op.operator2].toStdVector());
                 columnVectors[op.target]=ColumnVector(result);
                 std::cout<<"Result "<<op.target<<":"<<std::endl;
                 columnVectors[op.target].print();

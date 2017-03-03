@@ -30,7 +30,7 @@ class ColumnVector
         ColumnVector(const std::vector<float> &values);
         int sizeh();
         void print();
-        void setRawCell(int row,float data);
+        void setRawCell(unsigned int row,float data);
         std::vector<float> toStdVector();
         bool loadFromFile(const std::string &fileName, const std::string &vectorName);
 

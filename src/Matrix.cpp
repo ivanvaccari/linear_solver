@@ -24,26 +24,55 @@
 
 Matrix::Matrix():maxColumnNumber(0){
 }
-Matrix::Matrix(int rows,int columns):maxColumnNumber(columns){
+Matrix::Matrix(unsigned int rows,unsigned int columns):maxColumnNumber(columns){
 
     matrixData.resize(rows);
-    for(int i=0;i<rows;i++){
+    for(unsigned int i=0;i<rows;i++){
         matrixData[i].resize(columns);
     }
 }
 void Matrix::print(){
-    for(int i=0;i<matrixData.size();++i){
-        for(int k=0;k<matrixData[i].size();++k){
+    for(unsigned int i=0;i<matrixData.size();++i){
+        for(unsigned int k=0;k<matrixData[i].size();++k){
             std::cout<<matrixData[i][k]<<"\t";
         }
         std::cout<<std::endl;
     }
 }
-void Matrix::setRawCell(int row,int column,float data){
+void Matrix::setRawCell(unsigned int row,unsigned int column,float data){
     matrixData[row][column]=data;
 }
-int Matrix::sizeh(){
-return matrixData.size();
+float Matrix::getRawCell(unsigned int row,unsigned int column){
+    return matrixData[row][column];
+}
+unsigned int Matrix::sizeh(){
+    return matrixData.size();
+}
+
+float Matrix::diagonalDeterminant(){
+    float determinant=1;
+    for(unsigned int row=0;row<matrixData.size();++row){
+        determinant*=matrixData[row][row];
+    }
+    return determinant;
+}
+bool Matrix::isInferiorTriangular(){
+    for(unsigned int row=0;row<matrixData.size()-1;++row){
+        for(unsigned int column=row+1;column<matrixData.size();++column){
+            if (matrixData[row][column]!=0)
+                return false;
+        }
+    }
+    return true;
+}
+bool Matrix::isSuperiorTriangular(){
+    for(unsigned int row=0;row<matrixData.size();++row){
+        for(unsigned int column=0;column<row;++column){
+            if (matrixData[row][column]!=0)
+                return false;
+        }
+    }
+    return true;
 }
 float Matrix::determinant(){
 
@@ -54,7 +83,7 @@ float Matrix::determinant(){
     }else{
         float det=0;
         int mul=-1;
-        for(int i=0;i<matrixData.size();++i){
+        for(unsigned int i=0;i<matrixData.size();++i){
             mul=mul*(-1);
             Matrix min=minor(i,0);
             det+=mul*matrixData[i][0]*min.determinant();
@@ -62,25 +91,25 @@ float Matrix::determinant(){
         return det;
     }
 }
-void Matrix::replaceColumn(int columnNumber, std::vector<float> newColumn){
+void Matrix::replaceColumn(unsigned int columnNumber, std::vector<float> newColumn){
     if (matrixData.size()!=newColumn.size())
         throw std::string("Can't replace a column with the one provided. different sizes.");
     if (maxColumnNumber<columnNumber)
         throw std::string("Can't replace a column with the one provided. The matrix don't have this column number.");
 
-    for(int i=0;i<matrixData.size();++i)
+    for(unsigned int i=0;i<matrixData.size();++i)
         matrixData[i][columnNumber]=newColumn[i];
 }
-Matrix Matrix::minor(int row,int column){
+Matrix Matrix::minor(unsigned int row,unsigned int column){
     Matrix m(matrixData.size()-1,maxColumnNumber-1);
     int offset_column=0;
     int offset_row=0;
-    for(int i=0;i<matrixData.size();++i){
+    for(unsigned int i=0;i<matrixData.size();++i){
         if (i==row){
             offset_row=-1;
             continue;
         }
-        for(int k=0;k<matrixData[i].size();++k){
+        for(unsigned int k=0;k<matrixData[i].size();++k){
             if(k==column){
                 offset_column=-1;
                 continue;
@@ -132,7 +161,7 @@ bool Matrix::loadFromFile(const std::string &fileName, const std::string &matrix
             }
         }
         file.close();
-        for(int i=0;i<matrixData.size();++i){
+        for(unsigned int i=0;i<matrixData.size();++i){
             while (matrixData[i].size()<maxColumnNumber){
                 matrixData[i].push_back(0);
             }

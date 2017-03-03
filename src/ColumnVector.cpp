@@ -35,7 +35,7 @@ ColumnVector::ColumnVector(int rows){
 int ColumnVector::sizeh(){
     return data.size();
 }
-void ColumnVector::setRawCell(int row,float number){
+void ColumnVector::setRawCell(unsigned int row,float number){
     if (data.size()<=row)
         throw std::string("Can't set raw cell at this row. Vector is smaller.");
     data[row]=number;
@@ -45,7 +45,7 @@ std::vector<float> ColumnVector::toStdVector(){
 }
 
 void ColumnVector::print(){
-    for(int i=0;i<data.size();++i){
+    for(unsigned int i=0;i<data.size();++i){
         std::cout<<data[i]<<std::endl;
     }
 }

@@ -23,17 +23,21 @@ class Matrix
 {
 private:
     std::vector<std::vector<float> > matrixData;
-    int maxColumnNumber;
+    unsigned int maxColumnNumber;
 
 public:
     Matrix();
-    Matrix(int rows,int columns);
-    int sizeh();
+    Matrix(unsigned int rows,unsigned int columns);
+    unsigned int sizeh();
     void print();
-    void setRawCell(int row,int column,float data);
+    void setRawCell(unsigned int row,unsigned int column,float data);
+    float getRawCell(unsigned int row,unsigned int column);
+    bool isSuperiorTriangular();
+    bool isInferiorTriangular();
+    float diagonalDeterminant();
     float determinant();
-    void replaceColumn(int columnNumber, std::vector<float> newColumn);
-    Matrix minor(int row,int column);
+    void replaceColumn(unsigned int columnNumber, std::vector<float> newColumn);
+    Matrix minor(unsigned int row,unsigned int column);
     bool loadFromFile(const std::string &fileName, const std::string &matrixName);
 };
 
