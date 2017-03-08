@@ -18,6 +18,7 @@
 #include "Algorithms.h"
 #include "Matrix.h"
 #include <iostream>
+#include <cmath>
 namespace Algorithms
 {
     std::vector<float> cramer_solve(Matrix A, std::vector<float> b){
@@ -36,6 +37,41 @@ namespace Algorithms
         }
         return result;
     }
+
+    /*! \brief Build a triangular matrix   from a standard matix using gauss reduction algorithm
+
+        \param A A standard matrix to transform
+        \param b a vector of known terms
+
+    */
+    std::pair<Matrix,std::vector<float> > gauss_reduction(Matrix A,std::vector<float> b){
+
+        std::pair<unsigned int, unsigned int> pivot(0,0);
+        for(unsigned int column=0;column<A.sizeh()-1;column++){
+           for(unsigned int row=column+1;row<A.sizeh();row++){
+                if (A.getRawCell(column,column)==0)
+                    throw std::string("Can't reduct with gauss algorithm. Provided matrix have zero on diagonal");
+                float multiplier=-A.getRawCell(row,column)/A.getRawCell(column,column);
+
+                for(unsigned int subColumn=column; subColumn<A.sizeh();++subColumn){
+                    float coefficient=A.getRawCell(column,subColumn)*multiplier+A.getRawCell(row,subColumn);
+
+                    //just an approximation of very small numbers to 0
+                    double param, result;
+                    int n;
+                    result = frexp (coefficient , &n);
+                    if (n<-4)
+                        coefficient=0;
+
+                    A.setRawCell(row,subColumn,coefficient);
+                }
+
+                b[row]=b[column]*multiplier+b[row];
+            }
+        }
+        return std::make_pair(A,b);
+    }
+
 
     std::vector<float> triangular_matrix_solve(Matrix A, std::vector<float> b){
         std::vector<float> x(b.size());

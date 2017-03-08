@@ -65,10 +65,15 @@ int main(int argc, char* argv[]){
             throw std::string("No operations defined. Stopping here");
         }else{
             //just add target vector into cache to avoid being searched into the definition file.
-            //These vector aren't defined i the file, and without this trick the program will halt
+            //These vector aren't defined in the file, and without this trick the program will halt
             std::list<Operation> operations=p.operations;
             while (!operations.empty()){
-                columnVectors[operations.front().target]=ColumnVector();
+                if (!operations.front().targetVector.empty())
+                    columnVectors[operations.front().targetVector]=ColumnVector();
+
+                if (!operations.front().targetMatrix.empty())
+                    matrixes[operations.front().targetMatrix]=Matrix();
+
                 operations.pop_front();
             }
         }
@@ -76,8 +81,13 @@ int main(int argc, char* argv[]){
         //loading matrixes
         std::list<std::string> matrixNames=p.getMatrixNames();
         while (!matrixNames.empty()){
-            Matrix m;
             std::string matrixName=matrixNames.front();
+            if (matrixes.find(matrixName)!=matrixes.end()){
+                matrixNames.pop_front();
+                continue;
+            }
+            Matrix m;
+
             if (!m.loadFromFile(fileName,matrixName))
                 throw std::string("Can't load matrix ").append(matrixName).append(". Matrix not defined");
             else
@@ -110,21 +120,35 @@ int main(int argc, char* argv[]){
             p.operations.pop_front();
             if (op.operation=="cramer"){
                 std::cout<<std::endl;
-                std::cout<<"Solving "<<op.target<<"=cramer("<<op.operator1<<","<<op.operator2<<")..."<<std::endl;
+                std::cout<<"Solving "<<op.targetVector<<"=cramer("<<op.operatorMatrix<<","<<op.operatorVector<<")..."<<std::endl;
                 ColumnVector Xi;
-                float d=matrixes[op.operator1].determinant();
-                std::vector<float> result=Algorithms::cramer_solve(matrixes[op.operator1],columnVectors[op.operator2].toStdVector(),d);
-                columnVectors[op.target]=ColumnVector(result);
-                std::cout<<"Result "<<op.target<<":"<<std::endl;
-                columnVectors[op.target].print();
+                float d=matrixes[op.operatorMatrix].determinant();
+                std::vector<float> result=Algorithms::cramer_solve(matrixes[op.operatorMatrix],columnVectors[op.operatorVector].toStdVector(),d);
+                columnVectors[op.targetVector]=ColumnVector(result);
+
             }else if (op.operation=="triangularSolve"){
                 std::cout<<std::endl;
-                std::cout<<"Solving "<<op.target<<"=triangolarSolve("<<op.operator1<<","<<op.operator2<<")..."<<std::endl;
+                std::cout<<"Solving "<<op.targetVector<<"=triangolarSolve("<<op.operatorMatrix<<","<<op.operatorVector<<")..."<<std::endl;
                 ColumnVector Xi;
-                std::vector<float> result=Algorithms::triangular_matrix_solve(matrixes[op.operator1],columnVectors[op.operator2].toStdVector());
-                columnVectors[op.target]=ColumnVector(result);
-                std::cout<<"Result "<<op.target<<":"<<std::endl;
-                columnVectors[op.target].print();
+                std::vector<float> result=Algorithms::triangular_matrix_solve(matrixes[op.operatorMatrix],columnVectors[op.operatorVector].toStdVector());
+                columnVectors[op.targetVector]=ColumnVector(result);
+
+            }else if (op.operation=="gauss"){
+                std::cout<<std::endl;
+                std::cout<<"Building reduct system gauss("<<op.operatorMatrix<<","<<op.operatorVector<<")..."<<std::endl;
+                ColumnVector Xi;
+                std::pair<Matrix,std::vector<float> > result=Algorithms::gauss_reduction(matrixes[op.operatorMatrix],columnVectors[op.operatorVector].toStdVector());
+                matrixes[op.targetMatrix]=result.first;
+                columnVectors[op.targetVector]=ColumnVector(result.second);
+
+            }else if (op.operation=="print"){
+                if(columnVectors.find(op.operatorVector)!=columnVectors.end()){
+                    std::cout<<"Printing vector "<<op.operatorVector<<":"<<std::endl;
+                    columnVectors[op.operatorVector].print();
+                }else if(matrixes.find(op.operatorMatrix)!=matrixes.end()){
+                    std::cout<<"Printing matrix "<<op.operatorMatrix<<":"<<std::endl;
+                    matrixes[op.operatorMatrix].print();
+                }
             }
         }
 

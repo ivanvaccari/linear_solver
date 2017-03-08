@@ -29,6 +29,7 @@ namespace Algorithms
     //solve Ax=b where x is the returned value, b a vector of known terms and m a square matrix
     std::vector<float> triangular_matrix_solve(Matrix A, std::vector<float> b);
 
+    std::pair<Matrix,std::vector<float> > gauss_reduction(Matrix A,std::vector<float> b);
 }
 
 #endif // ALGORITHMS_H

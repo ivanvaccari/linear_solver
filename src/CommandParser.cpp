@@ -36,6 +36,24 @@ std::list<std::string> CommandParser::getMatrixNames(){
 std::list<std::string> CommandParser::getColumnVectorNames(){
     return columnVectorNames;
 }
+bool CommandParser::checkPrint(const std::vector<std::string> & tokens){
+    if (tokens.size()<4)
+        return false;
+    if (tokens[0]!="print")
+        return false ;
+    if (tokens[1]!="(")
+        return false;
+    if (tokens[3]!=")")
+        return false;
+
+    Operation op;
+    op.operatorMatrix=tokens[2];
+    op.operatorVector=tokens[2];
+    op.operation=tokens[0];
+
+    operations.push_back(op);
+    return true;
+}
 
 bool CommandParser::checkCramer(const std::vector<std::string> & tokens){
     if (tokens.size()<8)
@@ -57,9 +75,9 @@ bool CommandParser::checkCramer(const std::vector<std::string> & tokens){
         columnVectorNames.push_back(tokens[6]);
 
     Operation op;
-    op.target=tokens[0];
-    op.operator1=tokens[4];
-    op.operator2=tokens[6];
+    op.targetVector=tokens[0];
+    op.operatorMatrix=tokens[4];
+    op.operatorVector=tokens[6];
     op.operation=tokens[2];
 
     operations.push_back(op);
@@ -86,11 +104,42 @@ bool CommandParser::checkTriangularSolve(const std::vector<std::string> & tokens
         columnVectorNames.push_back(tokens[6]);
 
     Operation op;
-    op.target=tokens[0];
-    op.operator1=tokens[4];
-    op.operator2=tokens[6];
+    op.targetVector=tokens[0];
+    op.operatorMatrix=tokens[4];
+    op.operatorVector=tokens[6];
     op.operation=tokens[2];
 
+    operations.push_back(op);
+
+    return true;
+}
+bool CommandParser::checkGaussReduction(const std::vector<std::string> & tokens){
+    if (tokens.size()<9)
+        return false;
+    if (tokens[1]!=",")
+        return false ;
+    if (tokens[3]!="=")
+        return false ;
+    if (tokens[4]!="gauss")
+        return false ;
+    if (tokens[5]!="(")
+        return false;
+    if (tokens[7]!=",")
+        return false;
+    if (tokens[9]!=")")
+        return false;
+
+    if (std::find(matrixesNames.begin(),matrixesNames.end(),tokens[6])==matrixesNames.end())
+        matrixesNames.push_back(tokens[6]);
+    if (std::find(columnVectorNames.begin(),columnVectorNames.end(),tokens[8])==columnVectorNames.end())
+        columnVectorNames.push_back(tokens[8]);
+
+    Operation op;
+    op.operatorMatrix=tokens[6];
+    op.operatorVector=tokens[8];
+    op.operation=tokens[4];
+    op.targetMatrix=tokens[0];
+    op.targetVector=tokens[2];
     operations.push_back(op);
 
     return true;
@@ -98,7 +147,7 @@ bool CommandParser::checkTriangularSolve(const std::vector<std::string> & tokens
 void CommandParser::parseLine(const std::string &line){
     Tokenizer t;
     std::vector<std::string> tokens=t.tokenize(line);
-    bool ok=checkCramer(tokens)||checkTriangularSolve(tokens);
+    bool ok=checkCramer(tokens)||checkTriangularSolve(tokens)||checkGaussReduction(tokens)||checkPrint(tokens);
     if (!ok)
         throw std::string("unknow command ").append(line);
 }
