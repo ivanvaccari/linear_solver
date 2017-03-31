@@ -18,18 +18,24 @@
 #ifndef ALGORITHMS_H
 #define ALGORITHMS_H
 #include "Matrix.h"
-
+#include <tuple>
 namespace Algorithms
 {
     //solve Ax=b where x is the returned value, b a vector of known terms and m a square matrix
     std::vector<float> cramer_solve(Matrix A, std::vector<float> b);
+
     //solve Ax=b where x is the returned value, b a vector of known terms and m a square matrix
     std::vector<float> cramer_solve(Matrix A, std::vector<float> b,float precalculatedDeterminant);
 
     //solve Ax=b where x is the returned value, b a vector of known terms and m a square matrix
     std::vector<float> triangular_matrix_solve(Matrix A, std::vector<float> b);
 
-    std::pair<Matrix,std::vector<float> > gauss_reduction(Matrix A,std::vector<float> b);
+    /*! \brief Perform the gauss reduction alorithm (https://en.wikipedia.org/wiki/Gaussian_elimination)
+        \param A a matrix to reduct
+        \param b a vector of known terms to reduct
+        \return a tuple of values, containing in this order the reduct matrix, his transformed known terms vector and the permutation matrix
+    */
+    std::tuple<Matrix,std::vector<float>,Matrix > gauss_reduction(Matrix A,std::vector<float> b);
 }
 
 #endif // ALGORITHMS_H

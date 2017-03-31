@@ -20,26 +20,35 @@
 #include <string>
 #include <vector>
 #include <list>
+#include <map>
+#include "Matrix.h"
+#include "ColumnVector.h"
+#include "Algorithms.h"
+
 class Operation{
 
 public:
-    Operation():targetIsMatrix(false){
-    }
-    std::string operation;
-    std::string operatorMatrix;
-    std::string operatorVector;
-    std::string targetMatrix;
-    std::string targetVector;
-    bool targetIsMatrix;
-
+    Operation();
+    enum OpType {
+        Cramer,
+        TriangularSolve,
+        GaussReduction,
+        Print,
+    };
+    OpType type;
+    std::vector<std::string> parameters;
+    std::vector<std::string> targets;
+    void execute(std::map<std::string,Matrix> &matrixes, std::map<std::string,ColumnVector> &columnVectors);
 };
-
 class CommandParser
 {
     private:
-        std::list<std::string> matrixesNames;
-        std::list<std::string> columnVectorNames;
-
+        std::list<std::string> matrixParameters;
+        std::list<std::string> columnVectorParameters;
+        std::list<std::string> columnVectorTargets;
+        std::list<std::string> matrixTargets;
+        void checkLoadMatrixFromFile(std::string matrixName);
+        void checkLoadColumnVectorFromFile(std::string matrixName);
         bool checkCramer(const std::vector<std::string> & tokens);
         bool checkTriangularSolve(const std::vector<std::string> & tokens);
         bool checkGaussReduction(const std::vector<std::string> & tokens);
@@ -50,8 +59,8 @@ class CommandParser
         std::list<Operation> operations;
         void parseLine(const std::string &line);
         void loadFromFile(const std::string &fileName);
-        std::list<std::string> getMatrixNames();
-        std::list<std::string> getColumnVectorNames();
+        std::list<std::string> getMatrixesToBeLoaded();
+        std::list<std::string> getColumnVectorToBeLoaded();
 
 };
 

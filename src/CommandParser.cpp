@@ -20,7 +20,70 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <list>
 
+
+Operation::Operation(){
+    targets.reserve(10);
+    parameters.reserve(10);
+}
+void Operation::execute(std::map<std::string,Matrix> &matrixes, std::map<std::string,ColumnVector> &columnVectors){
+    switch(type){
+        case Operation::Cramer:{
+            if(matrixes.find(parameters[0])==matrixes.end())
+                throw std::string("Cannot perform cramer. Undefined matrix ").append(parameters[0]);
+            if(columnVectors.find(parameters[1])==columnVectors.end())
+                throw std::string("Cannot perform cramer. Undefined columnVector ").append(parameters[0]);
+
+            std::cout<<"Solving "<<targets[0]<<"=cramer("<<parameters[0]<<","<<parameters[1]<<")..."<<std::endl;
+            ColumnVector Xi;
+            float d=matrixes[parameters[0]].determinant();
+            std::vector<float> result=Algorithms::cramer_solve(matrixes[parameters[0]],columnVectors[parameters[1]].toStdVector(),d);
+            columnVectors[targets[0]]=ColumnVector(result);
+            }
+            break;
+        case Operation::TriangularSolve:{
+            if(matrixes.find(parameters[0])==matrixes.end())
+                throw std::string("Cannot perform triangular back substitution. Undefined matrix ").append(parameters[0]);
+            if(columnVectors.find(parameters[1])==columnVectors.end())
+                throw std::string("Cannot perform triangular back substitution. Undefined columnVector ").append(parameters[0]);
+
+            std::cout<<"Solving "<<targets[0]<<"=triangularSolve("<<parameters[0]<<","<<parameters[1]<<")..."<<std::endl;
+            ColumnVector Xi;
+            std::vector<float> result=Algorithms::triangular_matrix_solve(matrixes[parameters[0]],columnVectors[parameters[1]].toStdVector());
+            columnVectors[targets[0]]=ColumnVector(result);
+            }
+            break;
+         case Operation::GaussReduction:{
+            if(matrixes.find(parameters[0])==matrixes.end())
+                throw std::string("Cannot perform gauss reduction. Undefined matrix ").append(parameters[0]);
+            if(columnVectors.find(parameters[1])==columnVectors.end())
+                throw std::string("Cannot perform gauss reduction. Undefined columnVector ").append(parameters[0]);
+
+
+            std::cout<<"Building reduct system "<<targets[0]<<","<<targets[1]<<","<<targets[2]<<"=gauss("<<parameters[0]<<","<<parameters[1]<<")..."<<std::endl;
+            ColumnVector Xi;
+            std::tuple<Matrix,std::vector<float>, Matrix> result=Algorithms::gauss_reduction(matrixes[parameters[0]],columnVectors[parameters[1]].toStdVector());
+            matrixes[targets[0]]=std::get<0>(result);
+            matrixes[targets[2]]=std::get<2>(result);
+            columnVectors[targets[1]]=ColumnVector(std::get<1>(result));
+            }
+            break;
+        case Operation::Print:{
+            if(columnVectors.find(parameters[0])!=columnVectors.end()){
+                std::cout<<"Printing vector "<<parameters[0]<<":"<<std::endl;
+                columnVectors[parameters[0]].print();
+            }else if(matrixes.find(parameters[0])!=matrixes.end()){
+                std::cout<<"Printing matrix "<<parameters[0]<<":"<<std::endl;
+                matrixes[parameters[0]].print();
+            }else{
+                throw std::string("Cannot print undefined variable ").append(parameters[0]);
+            }
+            }
+            break;
+
+    }
+}
 CommandParser::CommandParser()
 {
     //ctor
@@ -30,11 +93,11 @@ CommandParser::~CommandParser()
 {
 
 }
-std::list<std::string> CommandParser::getMatrixNames(){
-    return matrixesNames;
+std::list<std::string> CommandParser::getMatrixesToBeLoaded(){
+    return matrixParameters;
 }
-std::list<std::string> CommandParser::getColumnVectorNames(){
-    return columnVectorNames;
+std::list<std::string> CommandParser::getColumnVectorToBeLoaded(){
+    return columnVectorParameters;
 }
 bool CommandParser::checkPrint(const std::vector<std::string> & tokens){
     if (tokens.size()<4)
@@ -47,11 +110,10 @@ bool CommandParser::checkPrint(const std::vector<std::string> & tokens){
         return false;
 
     Operation op;
-    op.operatorMatrix=tokens[2];
-    op.operatorVector=tokens[2];
-    op.operation=tokens[0];
-
+    op.parameters.push_back(tokens[2]);
+    op.type=Operation::Print;
     operations.push_back(op);
+
     return true;
 }
 
@@ -69,17 +131,16 @@ bool CommandParser::checkCramer(const std::vector<std::string> & tokens){
     if (tokens[7]!=")")
         return false;
 
-    if (std::find(matrixesNames.begin(),matrixesNames.end(),tokens[4])==matrixesNames.end())
-        matrixesNames.push_back(tokens[4]);
-    if (std::find(columnVectorNames.begin(),columnVectorNames.end(),tokens[6])==columnVectorNames.end())
-        columnVectorNames.push_back(tokens[6]);
+    checkLoadMatrixFromFile(tokens[4]);
+    checkLoadColumnVectorFromFile(tokens[4]);
 
     Operation op;
-    op.targetVector=tokens[0];
-    op.operatorMatrix=tokens[4];
-    op.operatorVector=tokens[6];
-    op.operation=tokens[2];
-
+    op.targets.push_back(tokens[0]);
+    columnVectorTargets.push_back(tokens[0]);
+    columnVectorParameters.remove(tokens[0]);
+    op.parameters.push_back(tokens[4]);
+    op.parameters.push_back(tokens[6]);
+    op.type=Operation::Cramer;
     operations.push_back(op);
 
     return true;
@@ -98,48 +159,68 @@ bool CommandParser::checkTriangularSolve(const std::vector<std::string> & tokens
     if (tokens[7]!=")")
         return false;
 
-    if (std::find(matrixesNames.begin(),matrixesNames.end(),tokens[4])==matrixesNames.end())
-        matrixesNames.push_back(tokens[4]);
-    if (std::find(columnVectorNames.begin(),columnVectorNames.end(),tokens[6])==columnVectorNames.end())
-        columnVectorNames.push_back(tokens[6]);
+    checkLoadMatrixFromFile(tokens[4]);
+    checkLoadColumnVectorFromFile(tokens[4]);
 
     Operation op;
-    op.targetVector=tokens[0];
-    op.operatorMatrix=tokens[4];
-    op.operatorVector=tokens[6];
-    op.operation=tokens[2];
-
+    op.targets.push_back(tokens[0]);
+    columnVectorTargets.push_back(tokens[0]);
+    op.parameters.push_back(tokens[4]);
+    op.parameters.push_back(tokens[6]);
+    op.type=Operation::TriangularSolve;
     operations.push_back(op);
 
     return true;
 }
+
+void CommandParser::checkLoadMatrixFromFile(std::string matrixName){
+    if((std::find(matrixTargets.begin(),matrixTargets.end(),matrixName)==matrixTargets.end()) &&
+       (std::find(matrixParameters.begin(),matrixParameters.end(),matrixName)==matrixParameters.end())){
+        matrixParameters.push_back(matrixName);
+    }
+
+
+}
+void CommandParser::checkLoadColumnVectorFromFile(std::string columnName){
+    if((std::find(columnVectorTargets.begin(),columnVectorTargets.end(),columnName)==columnVectorTargets.end())&&
+       (std::find(columnVectorParameters.begin(),columnVectorParameters.end(),columnName)==columnVectorParameters.end())){
+        columnVectorParameters.push_back(columnName);
+    }
+}
 bool CommandParser::checkGaussReduction(const std::vector<std::string> & tokens){
+
     if (tokens.size()<9)
         return false;
     if (tokens[1]!=",")
         return false ;
-    if (tokens[3]!="=")
+    if (tokens[3]!=",")
         return false ;
-    if (tokens[4]!="gauss")
+    if (tokens[5]!="=")
         return false ;
-    if (tokens[5]!="(")
+    if (tokens[6]!="gauss")
+        return false ;
+    if (tokens[7]!="(")
         return false;
-    if (tokens[7]!=",")
+    if (tokens[9]!=",")
         return false;
-    if (tokens[9]!=")")
+    if (tokens[11]!=")")
         return false;
 
-    if (std::find(matrixesNames.begin(),matrixesNames.end(),tokens[6])==matrixesNames.end())
-        matrixesNames.push_back(tokens[6]);
-    if (std::find(columnVectorNames.begin(),columnVectorNames.end(),tokens[8])==columnVectorNames.end())
-        columnVectorNames.push_back(tokens[8]);
+    checkLoadMatrixFromFile(tokens[8]);
+    checkLoadColumnVectorFromFile(tokens[10]);
 
     Operation op;
-    op.operatorMatrix=tokens[6];
-    op.operatorVector=tokens[8];
-    op.operation=tokens[4];
-    op.targetMatrix=tokens[0];
-    op.targetVector=tokens[2];
+    op.parameters.push_back(tokens[8]);
+    op.parameters.push_back(tokens[10]);
+    op.type=Operation::GaussReduction;
+    op.targets.push_back(tokens[0]);
+    op.targets.push_back(tokens[2]);
+    op.targets.push_back(tokens[4]);
+
+    matrixTargets.push_back(tokens[0]);
+    matrixTargets.push_back(tokens[4]);
+    columnVectorTargets.push_back(tokens[2]);
+
     operations.push_back(op);
 
     return true;
@@ -147,7 +228,10 @@ bool CommandParser::checkGaussReduction(const std::vector<std::string> & tokens)
 void CommandParser::parseLine(const std::string &line){
     Tokenizer t;
     std::vector<std::string> tokens=t.tokenize(line);
-    bool ok=checkCramer(tokens)||checkTriangularSolve(tokens)||checkGaussReduction(tokens)||checkPrint(tokens);
+    bool ok=checkCramer(tokens);
+    ok=ok||checkTriangularSolve(tokens);
+    ok=ok||checkGaussReduction(tokens);
+    ok=ok||checkPrint(tokens);
     if (!ok)
         throw std::string("unknow command ").append(line);
 }

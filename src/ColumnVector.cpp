@@ -59,6 +59,11 @@ bool ColumnVector::loadFromFile(const std::string &fileName, const std::string &
     if (file.is_open()){
         std::string line;
         while (std::getline(file,line)){
+            while ((line.length()>0) && (line.at(0)==' '))
+                line=line.substr(1);
+            while ((line.length()>0) && (line.at(line.length()-1)==' '))
+                line.resize(line.length()-1);
+
             if (process && line.length()==0){
                 process=false;
                 ret=true;

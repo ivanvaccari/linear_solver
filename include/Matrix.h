@@ -19,6 +19,7 @@
 #define MATRIX_H
 #include <vector>
 #include <string>
+#include <tuple>
 class Matrix
 {
 private:
@@ -36,6 +37,8 @@ public:
     bool isInferiorTriangular();
     float diagonalDeterminant();
     float determinant();
+    void makeIdentity();
+    void swapRows(unsigned int row1,unsigned int row2);
     void replaceColumn(unsigned int columnNumber, std::vector<float> newColumn);
     Matrix minor(unsigned int row,unsigned int column);
     bool loadFromFile(const std::string &fileName, const std::string &matrixName);

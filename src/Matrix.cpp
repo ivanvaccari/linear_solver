@@ -20,6 +20,7 @@
 #include <vector>
 #include <cstdlib>
 #include <iostream>
+#include <iomanip>
 #include "Matrix.h"
 
 Matrix::Matrix():maxColumnNumber(0){
@@ -34,7 +35,8 @@ Matrix::Matrix(unsigned int rows,unsigned int columns):maxColumnNumber(columns){
 void Matrix::print(){
     for(unsigned int i=0;i<matrixData.size();++i){
         for(unsigned int k=0;k<matrixData[i].size();++k){
-            std::cout<<matrixData[i][k]<<"\t";
+            std::cout << std::left << std::setw(10) << std::setfill(' ') << matrixData[i][k];
+            //std::cout<<matrixData[i][k]<<"\t";
         }
         std::cout<<std::endl;
     }
@@ -99,6 +101,23 @@ void Matrix::replaceColumn(unsigned int columnNumber, std::vector<float> newColu
 
     for(unsigned int i=0;i<matrixData.size();++i)
         matrixData[i][columnNumber]=newColumn[i];
+}
+
+void Matrix::swapRows(unsigned int row1,unsigned int row2){
+    for(unsigned int col=0;col<sizeh();col++){
+        float temp=matrixData[row1][col];
+        matrixData[row1][col]=matrixData[row2][col];
+        matrixData[row2][col]=temp;
+    }
+}
+
+void Matrix::makeIdentity(){
+    for(unsigned int i=0;i<matrixData.size();++i){
+        for(unsigned int k=0;k<matrixData[i].size();++k){
+           matrixData[i][k]=(k==i);
+        }
+        std::cout<<std::endl;
+    }
 }
 Matrix Matrix::minor(unsigned int row,unsigned int column){
     Matrix m(matrixData.size()-1,maxColumnNumber-1);

@@ -44,19 +44,39 @@ namespace Algorithms
         \param b a vector of known terms
 
     */
-    std::pair<Matrix,std::vector<float> > gauss_reduction(Matrix A,std::vector<float> b){
+    std::tuple<Matrix,std::vector<float>,Matrix> gauss_reduction(Matrix A,std::vector<float> b){
 
+        //NOTE: in this piece of code there are a lot of column/row variable usages with a lot of different combinations.
+        //Can be tricky to read.
+
+        Matrix permutation(A.sizeh(),A.sizeh());
+        permutation.makeIdentity();
         std::pair<unsigned int, unsigned int> pivot(0,0);
         for(unsigned int column=0;column<A.sizeh()-1;column++){
            for(unsigned int row=column+1;row<A.sizeh();row++){
-                if (A.getRawCell(column,column)==0)
-                    throw std::string("Can't reduct with gauss algorithm. Provided matrix have zero on diagonal");
-                float multiplier=-A.getRawCell(row,column)/A.getRawCell(column,column);
+                bool performGauss=false;
+                if (A.getRawCell(column,column)==0){
+                    for(unsigned int newRow=row;newRow<A.sizeh();newRow++){
+                        if (A.getRawCell(newRow,column)!=0){
+                            permutation.swapRows(newRow,row-1);
+                            A.swapRows(newRow,row-1);
+                            float temp=b[newRow];
+                            b[newRow]=b[row-1];
+                            b[row-1]=temp;
+                            performGauss=true;
+                        }
+                    }
+                }else{
+                    performGauss=true;
+                }
+                if (!performGauss)
+                    continue;
 
+                float multiplier=(-1)*A.getRawCell(row,column)/A.getRawCell(column,column);
                 for(unsigned int subColumn=column; subColumn<A.sizeh();++subColumn){
                     float coefficient=A.getRawCell(column,subColumn)*multiplier+A.getRawCell(row,subColumn);
 
-                    //just an approximation of very small numbers to 0
+                    //DON'T EVEN WATCH THIS PIECE OF CODE. Skip it for your brain health. Just an approximation of very small numbers to 0
                     double param, result;
                     int n;
                     result = frexp (coefficient , &n);
@@ -69,7 +89,7 @@ namespace Algorithms
                 b[row]=b[column]*multiplier+b[row];
             }
         }
-        return std::make_pair(A,b);
+        return std::make_tuple(A,b,permutation);
     }
 
 

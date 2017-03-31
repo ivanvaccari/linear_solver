@@ -63,62 +63,41 @@ int main(int argc, char* argv[]){
 
         if (p.operations.size()==0){
             throw std::string("No operations defined. Stopping here");
-        }else{
-            //just add target vector into cache to avoid being searched into the definition file.
-            //These vector aren't defined in the file, and without this trick the program will halt
-            std::list<Operation> operations=p.operations;
-            while (!operations.empty()){
-                if (!operations.front().targetVector.empty())
-                    columnVectors[operations.front().targetVector]=ColumnVector();
-
-                if (!operations.front().targetMatrix.empty())
-                    matrixes[operations.front().targetMatrix]=Matrix();
-
-                operations.pop_front();
-            }
         }
 
         //loading matrixes
-        std::list<std::string> matrixNames=p.getMatrixNames();
+        std::list<std::string> matrixNames=p.getMatrixesToBeLoaded();
         while (!matrixNames.empty()){
             std::string matrixName=matrixNames.front();
-            if (matrixes.find(matrixName)!=matrixes.end()){
-                matrixNames.pop_front();
-                continue;
-            }
+            matrixNames.pop_front();
             Matrix m;
-
             if (!m.loadFromFile(fileName,matrixName))
                 throw std::string("Can't load matrix ").append(matrixName).append(". Matrix not defined");
             else
                 std::cout<<"Matrix "<<matrixName<<" loaded"<<std::endl;
             matrixes[matrixName]=m;
-            matrixNames.pop_front();
         }
 
         //loading vectors
-        std::list<std::string> columnVectorNames=p.getColumnVectorNames();
+        std::list<std::string> columnVectorNames=p.getColumnVectorToBeLoaded();
         while (!columnVectorNames.empty()){
             std::string colVectorName=columnVectorNames.front();
-            //in the case the vector is already  in cache, do not load it from file
-            if (columnVectors.find(colVectorName)!=columnVectors.end()){
-                columnVectorNames.pop_front();
-                continue;
-            }
+            columnVectorNames.pop_front();
             ColumnVector v;
             if (!v.loadFromFile(fileName,colVectorName))
                 throw std::string("Can't load column vector ").append(colVectorName).append(". Column vector not defined");
             else
                 std::cout<<"Column vector "<<colVectorName<<" loaded"<<std::endl;
             columnVectors[colVectorName]=v;
-            columnVectorNames.pop_front();
         }
 
         //running commands
         while (!p.operations.empty()){
             Operation op=p.operations.front();
             p.operations.pop_front();
-            if (op.operation=="cramer"){
+            op.execute(matrixes,columnVectors);
+
+            /*if (op.operation=="cramer"){
                 std::cout<<std::endl;
                 std::cout<<"Solving "<<op.targetVector<<"=cramer("<<op.operatorMatrix<<","<<op.operatorVector<<")..."<<std::endl;
                 ColumnVector Xi;
@@ -142,6 +121,7 @@ int main(int argc, char* argv[]){
                 columnVectors[op.targetVector]=ColumnVector(result.second);
 
             }else if (op.operation=="print"){
+
                 if(columnVectors.find(op.operatorVector)!=columnVectors.end()){
                     std::cout<<"Printing vector "<<op.operatorVector<<":"<<std::endl;
                     columnVectors[op.operatorVector].print();
@@ -149,7 +129,7 @@ int main(int argc, char* argv[]){
                     std::cout<<"Printing matrix "<<op.operatorMatrix<<":"<<std::endl;
                     matrixes[op.operatorMatrix].print();
                 }
-            }
+            }*/
         }
 
     }catch(std::string e){

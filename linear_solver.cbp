@@ -13,6 +13,7 @@
 				<Option compiler="gcc" />
 				<Option parameters=" -f sistema.txt " />
 				<Compiler>
+					<Add option="-std=c++11" />
 					<Add option="-g" />
 					<Add directory="include" />
 				</Compiler>
