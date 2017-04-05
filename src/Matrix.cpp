@@ -44,10 +44,10 @@ void Matrix::print(){
 void Matrix::setRawCell(unsigned int row,unsigned int column,float data){
     matrixData[row][column]=data;
 }
-float Matrix::getRawCell(unsigned int row,unsigned int column){
+float Matrix::getRawCell(unsigned int row,unsigned int column) const{
     return matrixData[row][column];
 }
-unsigned int Matrix::sizeh(){
+unsigned int Matrix::sizeh() const{
     return matrixData.size();
 }
 
@@ -116,7 +116,13 @@ void Matrix::makeIdentity(){
         for(unsigned int k=0;k<matrixData[i].size();++k){
            matrixData[i][k]=(k==i);
         }
-        std::cout<<std::endl;
+    }
+}
+void Matrix::makeZero(){
+    for(unsigned int i=0;i<matrixData.size();++i){
+        for(unsigned int k=0;k<matrixData[i].size();++k){
+           matrixData[i][k]=0;
+        }
     }
 }
 Matrix Matrix::minor(unsigned int row,unsigned int column){

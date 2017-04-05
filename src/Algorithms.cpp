@@ -38,12 +38,32 @@ namespace Algorithms
         return result;
     }
 
-    /*! \brief Build a triangular matrix   from a standard matix using gauss reduction algorithm
+    std::tuple<Matrix,Matrix> doolittle(const Matrix & A){
+        Matrix L(A.sizeh(),A.sizeh());
+        L.makeIdentity();
+        Matrix U(A.sizeh(),A.sizeh());
+        U.makeZero();
 
-        \param A A standard matrix to transform
-        \param b a vector of known terms
+        for(unsigned int k=0;k<A.sizeh();k++){
+            for(unsigned int i=k;i<A.sizeh();i++){
+                float sum=0;
+                if (k>0)
+                    for(unsigned int h=0;h<k;h++){
+                        sum+=(L.getRawCell(k,h)*U.getRawCell(h,i));
+                    }
+                U.setRawCell(k,i,A.getRawCell(k,i)-sum);
+            }
+            for(unsigned int i=k+1;i<A.sizeh();i++){
+                float sum=0;
+                if (k>0)
+                    for(unsigned int h=0;h<k;h++)
+                        sum+=(L.getRawCell(i,h)*U.getRawCell(h,k));
+                L.setRawCell(i,k,(A.getRawCell(i,k)-sum)/U.getRawCell(k,k));
+            }
+        }
+        return std::make_tuple(L,U);
+    }
 
-    */
     std::tuple<Matrix,std::vector<float>,Matrix> gauss_reduction(Matrix A,std::vector<float> b){
 
         //NOTE: in this piece of code there are a lot of column/row variable usages with a lot of different combinations.
@@ -77,12 +97,13 @@ namespace Algorithms
                     float coefficient=A.getRawCell(column,subColumn)*multiplier+A.getRawCell(row,subColumn);
 
                     //DON'T EVEN WATCH THIS PIECE OF CODE. Skip it for your brain health. Just an approximation of very small numbers to 0
-                    double param, result;
-                    int n;
-                    result = frexp (coefficient , &n);
-                    if (n<-4)
-                        coefficient=0;
-
+                    {
+                        double result;
+                        int n;
+                        result = frexp (coefficient , &n);
+                        if (n<-4)
+                            coefficient=0;
+                    }
                     A.setRawCell(row,subColumn,coefficient);
                 }
 

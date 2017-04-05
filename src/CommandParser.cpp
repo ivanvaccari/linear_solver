@@ -69,6 +69,16 @@ void Operation::execute(std::map<std::string,Matrix> &matrixes, std::map<std::st
             columnVectors[targets[1]]=ColumnVector(std::get<1>(result));
             }
             break;
+        case Operation::Doolittle:{
+            if(matrixes.find(parameters[0])==matrixes.end())
+                throw std::string("Cannot perform doolittle decomposition. Undefined matrix ").append(parameters[0]);
+
+            std::cout<<"Building reduct system "<<targets[0]<<","<<targets[1]<<"=doolittle("<<parameters[0]<<")..."<<std::endl;
+            std::tuple<Matrix,Matrix> result=Algorithms::doolittle(matrixes[parameters[0]]);
+            matrixes[targets[0]]=std::get<0>(result);
+            matrixes[targets[1]]=std::get<1>(result);
+            }
+            break;
         case Operation::Print:{
             if(columnVectors.find(parameters[0])!=columnVectors.end()){
                 std::cout<<"Printing vector "<<parameters[0]<<":"<<std::endl;
@@ -225,6 +235,37 @@ bool CommandParser::checkGaussReduction(const std::vector<std::string> & tokens)
 
     return true;
 }
+bool CommandParser::checkDoolittle(const std::vector<std::string> & tokens){
+
+    if (tokens.size()<8)
+        return false;
+    if (tokens[1]!=",")
+        return false ;
+    if (tokens[3]!="=")
+        return false ;
+    if (tokens[4]!="doolittle")
+        return false ;
+    if (tokens[5]!="(")
+        return false;
+    if (tokens[7]!=")")
+        return false;
+
+
+    checkLoadMatrixFromFile(tokens[6]);
+
+    Operation op;
+    op.parameters.push_back(tokens[6]);
+    op.type=Operation::Doolittle;
+    op.targets.push_back(tokens[0]);
+    op.targets.push_back(tokens[2]);
+
+    matrixTargets.push_back(tokens[0]);
+    columnVectorTargets.push_back(tokens[2]);
+
+    operations.push_back(op);
+
+    return true;
+}
 void CommandParser::parseLine(const std::string &line){
     Tokenizer t;
     std::vector<std::string> tokens=t.tokenize(line);
@@ -232,6 +273,7 @@ void CommandParser::parseLine(const std::string &line){
     ok=ok||checkTriangularSolve(tokens);
     ok=ok||checkGaussReduction(tokens);
     ok=ok||checkPrint(tokens);
+    ok=ok||checkDoolittle(tokens);
     if (!ok)
         throw std::string("unknow command ").append(line);
 }

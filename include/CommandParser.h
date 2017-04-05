@@ -33,7 +33,8 @@ public:
         Cramer,
         TriangularSolve,
         GaussReduction,
-        Print,
+        Doolittle,
+        Print
     };
     OpType type;
     std::vector<std::string> parameters;
@@ -52,6 +53,7 @@ class CommandParser
         bool checkCramer(const std::vector<std::string> & tokens);
         bool checkTriangularSolve(const std::vector<std::string> & tokens);
         bool checkGaussReduction(const std::vector<std::string> & tokens);
+        bool checkDoolittle(const std::vector<std::string> & tokens);
         bool checkPrint(const std::vector<std::string> & tokens);
     public:
         CommandParser();
